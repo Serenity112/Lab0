@@ -1,0 +1,11 @@
+def func(a):
+    #print("Размер массива")
+    print(a.shape)
+    #print("Количество осей")
+    print(a.ndim)
+    #print("Объект, описывающий тип элементов в массиве")
+    print(a.dtype.name)
+    #print("Размер в байтах каждого элемента массива")
+    print(a.itemsize)
+    #print("Общее количество элементов массива")
+    print(a.size)
