@@ -3,8 +3,8 @@ import pandas as pd
 from func import func
 
 # Создаём массивы с равномерным и нормыльным распределениями
-uniform_array = np.random.rand(17, 19)
-normal_array = np.random.randn(17, 19)
+uniform_array = np.random.rand(5, 5)
+normal_array = np.random.randn(5, 5)
 
 print("Равномерно распределенные")
 print(uniform_array)

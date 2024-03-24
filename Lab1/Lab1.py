@@ -77,8 +77,8 @@ def task1():
     predict(x, y, class0, class1)
     
 def task2():
-    ellipse_params = {'center_x': 50, 'center_y': 50, 'a': 45, 'b': 45}
-    rectangle_params = {'left': 0, 'right': 100, 'bottom': 0, 'top': 70, 'circle_center_x': 50, 'circle_center_y': 50, 'circle_radius': 10}
+    ellipse_params = {'center_x': 50, 'center_y': 50, 'a': 25, 'b': 25}
+    rectangle_params = {'left': 0, 'right': 100, 'bottom': 0, 'top': 50, 'circle_center_x': 50, 'circle_center_y': 50, 'circle_radius': 10}
     N = 1000
     
     x, y, class0, class1 = dataGen.generate_points(N, ellipse_params, rectangle_params)
@@ -100,8 +100,8 @@ def classify(classifier, xtrain, xtest, ytrain, ytest):
     print("AUC:"+str(AUC))
 
 def lab3():
-    ellipse_params = {'center_x': 50, 'center_y': 60, 'a': 35, 'b': 35}
-    rectangle_params = {'left': 0, 'right': 100, 'bottom': 40, 'top': 100, 'circle_center_x': 50, 'circle_center_y': 50, 'circle_radius': 1}
+    ellipse_params = {'center_x': 50, 'center_y': 60, 'a': 55, 'b': 55}
+    rectangle_params = {'left': 0, 'right': 100, 'bottom': 0, 'top': 100, 'circle_center_x': 50, 'circle_center_y': 50, 'circle_radius': 1}
     N = 1000
     x, y, class0, class1 = dataGen.generate_points(N, ellipse_params, rectangle_params)
 
@@ -139,63 +139,75 @@ def lab3():
     print("Best AUC:", best_auc)
     print("Optimal tree num:", best_num_trees)
 
-def sigmoid(Z):
-    return 1/(1+np.exp(-Z))
+def sigmoid(Z : float) -> float:
+    return 1/(1 + np.exp(-Z))
 
-def sigmoid_derivative(p):
-    return p * (1 - p)
+def sigmoid_der(S : float) -> float:
+    return S * (1 - S)
 
 class NeuralNetwork:
-    def __init__(self, x, y, n_neuro):
-        self.n_neuro = n_neuro
+    def __init__(self, x, y, n_neuro = 4):
         self.input = x
         n_inp = self.input.shape[1]
-        self.weights1= np.random.rand(n_inp,n_neuro)
+        self.weights1 = np.random.rand(n_inp, n_neuro)
         self.weights2 = np.random.rand(n_neuro, 1)
         self.y = y
-        self.output = np. zeros(y.shape)
-        self.layer1 = 0
-        self.layer2 = 0
-        
+        self.output = np.zeros(y.shape)
+    
     def feedforward(self):
         self.layer1 = sigmoid(np.dot(self.input, self.weights1))
         self.layer2 = sigmoid(np.dot(self.layer1, self.weights2))
         return self.layer2
     
     def backprop(self):
-        d_weights2 = np.dot(self.layer1.T, 2*(self.y - self.output)*sigmoid_derivative(self.output))
-        d_weights1 = np.dot(self.input.T, np.dot(2*(self.y - self.output)*sigmoid_derivative(self.output), self.weights2.T)*sigmoid_derivative(self.layer1))
+        d_weights2 = np.dot(self.layer1.T, 2 * (self.y - self.output) * sigmoid_der(self.output))
+        d_weights1 = np.dot(self.input.T, np.dot(2 * (self.y - self.output) * sigmoid_der(self.output), self.weights2.T) * sigmoid_der(self.layer1))
         self.weights1 += d_weights1
         self.weights2 += d_weights2
-        return self.weights1, self.weights2
     
-    def train(self):
+    def train(self, X, y):
         self.output = self.feedforward()
-        return self.backprop()
+        self.backprop()
 
 def lab4():
-    ellipse_params = {'center_x': 50, 'center_y': 50, 'a': 45, 'b': 45}
-    rectangle_params = {'left': 0, 'right': 100, 'bottom': 0, 'top': 30, 'circle_center_x': 50, 'circle_center_y': 50, 'circle_radius': 10}
+    mu0 = [0, 2, 3]
+    mu1 = [3, 5, 1]
+    mu = [mu0, mu1]
+    sigma0 = [2, 1, 2]
+    sigma1 = [1, 2, 1]
+    sigma = [sigma0, sigma1]
+    col = len(mu0)
+    n = 1000
+
+    ellipse_params = {'center_x': 50, 'center_y': 60, 'a': 35, 'b': 35}
+    rectangle_params = {'left': 0, 'right': 100, 'bottom': 40, 'top': 100, 'circle_center_x': 50, 'circle_center_y': 50, 'circle_radius': 1}
     N = 1000
     x, y, class0, class1 = dataGen.generate_points(N, ellipse_params, rectangle_params)
-    plt.scatter(class0[:, 0], class0[:, 1], marker=".", alpha=0.7, label='1')
-    plt.scatter(class1[:, 0], class1[:, 1], marker=".", alpha=0.7, label='2')
+
+    x, y, class0, class1 = dataGen.norm_dataset(mu, sigma, n)
+    y = np.reshape(y, [2 * n, 1])
+
+    NN = NeuralNetwork(x, y, 7)
+    N_epoch = 30
+    epoch_range = range(N_epoch)
+
+    losses = np.array([0.] * N_epoch)
+    accuracy = np.array([0.] * N_epoch)
+    for i in epoch_range:
+        pred = NN.feedforward()
+        losses[i] = np.mean(np.square(y - pred))
+        accuracy[i] = sum(abs(y == (pred > 0.25)))/len(y) # Возможно неверно
+        print(f"Iteration #{i}\nLoss: {losses[i]}")
+        NN.train(x, y)
+
+    plt.plot(epoch_range, losses)
+    plt.plot(epoch_range, accuracy)
+    plt.title("Loss and accuracy of NN model")
+    plt.xlabel("Epoch")
+    plt.ylabel("Value")
+    plt.legend(["Loss", "Accuracy"])
+    plt.grid(visible = True)
     plt.show()
-    y = np.reshape(y,[2*N,1])
-
-
-    NN = NeuralNetwork(x, y, 10)
-    N_epoch = 100
-    losses = []
-    accuracies = []
-
-
-    for i in range(N_epoch):
-       print ("for iteration # " + str(i) + "\n")
-       print ("Loss: \n" + str(np.mean(np.square(y - NN.feedforward()))))
-       backprop = NN.train()
-    
-
 
 
 if __name__ == "__main__":

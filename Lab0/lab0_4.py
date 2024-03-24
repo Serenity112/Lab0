@@ -62,16 +62,16 @@ def make_boxplot(df):
     plt.show()
 
 def make_scatter_matrix():
-
     data = pd.read_csv("csv1.csv")
+    data.replace({'Yes': 1, 'No': 0}, inplace=True)
     pd.plotting.scatter_matrix(data.iloc[:,[0,2,3]], c= data["class"].replace(["1","0"],["blue","red"]))
     plt.show()
 
 table = pd.read_csv("csv0.csv")
 #analyze_dataframe(table)
-yes_no_frames(table)
+#yes_no_frames(table)
 #sort_df(table)
 #is_null_df(table)
-#make_gistogram(table)
-#make_boxplot(table)
-#make_scatter_matrix()
+make_gistogram(table)
+make_boxplot(table)
+make_scatter_matrix()
